@@ -5,8 +5,24 @@
 <title>جزيرة الأرقام الذهبية</title>
 
 <!-- Firebase (compat version stable) -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+  const firebaseConfig = {
+const firebaseConfig = {
+  apiKey: "AIzaSyDM7LdmSOalh4ARB8k8NZsQvNgVG2zuNmA",
+  authDomain: "maths-fcd2d.firebaseapp.com",
+  projectId: "maths-fcd2d",
+  storageBucket: "maths-fcd2d.firebasestorage.app",
+  messagingSenderId: "310354706176",
+  appId: "1:310354706176:web:a3a4ceebe4f6e1b5333de5",
+  measurementId: "G-JV36HY44ZB"
+};
+
+  const app = initializeApp(firebaseConfig);
+
+  console.log("Firebase connected ✅");
+</script>
 
 <!-- Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
