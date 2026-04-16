@@ -4,24 +4,25 @@
 <meta charset="UTF-8">
 <title>جزيرة الأرقام الذهبية</title>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+<!-- Firebase (compat version stable) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-<!-- Chart.js -->
+<!-- Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{font-family:Arial;margin:0;background:linear-gradient(#4facfe,#43e97b);text-align:center}
+body{margin:0;font-family:Arial;background:linear-gradient(#4facfe,#43e97b);text-align:center}
 .screen{display:none;padding:20px}
 .active{display:block}
-button{padding:10px;background:orange;border:none;border-radius:10px;color:white;margin:5px}
+
+button{padding:10px;border:none;border-radius:10px;background:orange;color:white;margin:5px}
 input{padding:8px;margin:5px}
 
-.cards{display:grid;grid-template-columns:repeat(2,130px);gap:10px;justify-content:center}
-.card{height:130px;background:gold;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer}
+.cards{display:grid;grid-template-columns:repeat(2,120px);gap:10px;justify-content:center;margin-top:20px}
+.card{height:120px;background:gold;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer}
 
-.chartBox{width:90%;max-width:500px;margin:auto;background:white;padding:10px;border-radius:10px}
+.chartBox{background:white;padding:10px;border-radius:10px;margin:15px auto;width:90%;max-width:500px}
 </style>
 </head>
 
@@ -30,22 +31,24 @@ input{padding:8px;margin:5px}
 <!-- LOGIN -->
 <div id="login" class="screen active">
 <h1>🏝️ جزيرة الأرقام الذهبية</h1>
-<button onclick="setRole('student')">تلميذ</button>
-<button onclick="setRole('teacher')">أستاذ</button><br>
+<button onclick="role='student'">تلميذ</button>
+<button onclick="role='teacher'">أستاذ</button><br>
 <input id="name" placeholder="الاسم">
-<input id="class" placeholder="القسم">
-<br>
+<input id="className" placeholder="القسم"><br>
 <button onclick="enter()">دخول</button>
 </div>
 
 <!-- GAME -->
 <div id="game" class="screen">
-<h2 style="color:white">⭐ <span id="score">0</span> | ⏳ <span id="time">60</span></h2>
+<h2 style="color:white">
+⭐ <span id="score">0</span> | ⏳ <span id="time">60</span>
+</h2>
+
 <div id="cards" class="cards"></div>
 
 <div id="qbox" style="display:none">
-<h2 id="q"></h2>
-<input id="ans">
+<h2 id="question"></h2>
+<input id="answer">
 <button onclick="submit()">تأكيد</button>
 </div>
 </div>
@@ -55,103 +58,115 @@ input{padding:8px;margin:5px}
 <h2>📊 Dashboard الأستاذ</h2>
 
 <div class="chartBox">
-<canvas id="barChart"></canvas>
+<canvas id="bar"></canvas>
 </div>
-
-<br>
 
 <div class="chartBox">
-<canvas id="pieChart"></canvas>
+<canvas id="pie"></canvas>
 </div>
 
-<button onclick="back()">رجوع</button>
+<button onclick="show('login')">رجوع</button>
 </div>
 
 <script>
-// 🔴 ضع config ديالك هنا
+// 🔥 ضع config هنا
 const firebaseConfig = {
-  apiKey: "PUT_HERE",
-  authDomain: "PUT_HERE",
-  projectId: "PUT_HERE"
+  apiKey: "PUT",
+  authDomain: "PUT",
+  projectId: "PUT"
 };
 
-const app = firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let role="",player="",cls="";
-let score=0,time=60,timer,currentAnswer=null;
+// VARIABLES
+let role="", player="", cls="";
+let score=0,time=60,timer;
+let correct=0, wrong=0;
+let currentAnswer=null;
 
-// LOGIN
-function setRole(r){role=r}
-
-function enter(){
-player=name.value; cls=class.value;
-
-if(role==="student") startGame();
-else loadDashboard();
-}
-
+// UI
 function show(id){
 document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
 document.getElementById(id).classList.add("active");
 }
 
+// LOGIN
+function enter(){
+player=document.getElementById("name").value;
+cls=document.getElementById("className").value;
+
+if(!player || !cls) return alert("دخل الاسم والقسم");
+
+if(role==="student") startGame();
+else loadDashboard();
+}
+
 // GAME
 function startGame(){
 show("game");
-score=0; time=60;
+score=0;time=60;correct=0;wrong=0;
 generateCards();
+update();
 
 timer=setInterval(()=>{
-time--; update();
+time--;
+update();
 if(time<=0){clearInterval(timer);endGame();}
 },1000);
 }
 
 function update(){
-scoreEl.innerText=score;
-timeEl.innerText=time;
+document.getElementById("score").innerText=score;
+document.getElementById("time").innerText=time;
 }
 
 function generateCards(){
-cards.innerHTML="";
+let c=document.getElementById("cards");
+c.innerHTML="";
 for(let i=0;i<4;i++){
 let d=document.createElement("div");
 d.className="card";
 d.innerText="❓";
-d.onclick=()=>question();
-cards.appendChild(d);
+d.onclick=()=>ask();
+c.appendChild(d);
 }
 }
 
-function question(){
+function ask(){
 let a=rand(1,20),b=rand(1,20);
 currentAnswer=a+b;
-q.innerText=`${a}+${b}`;
-qbox.style.display="block";
+document.getElementById("question").innerText=`${a} + ${b}`;
+document.getElementById("qbox").style.display="block";
 }
 
 function submit(){
-if(ans.value==currentAnswer){score+=10;save(true)}
-else{score-=3;save(false)}
+let v=document.getElementById("answer").value;
 
-ans.value=""; qbox.style.display="none";
-generateCards(); update();
+if(v==currentAnswer){
+score+=10; correct++;
+}else{
+score-=3; wrong++;
 }
 
-// FIREBASE SAVE
-async function save(correct){
-await db.collection("students").add({
+document.getElementById("answer").value="";
+document.getElementById("qbox").style.display="none";
+generateCards();
+update();
+}
+
+// SAVE SESSION (مرة وحدة)
+async function endGame(){
+await db.collection("results").add({
 name:player,
 class:cls,
-correct:correct?1:0,
-wrong:correct?0:1,
 score:score,
-date:Date.now()
+correct:correct,
+wrong:wrong,
+date:new Date()
 });
-}
 
-function endGame(){
+alert("تم حفظ النتيجة");
 show("login");
 }
 
@@ -159,19 +174,20 @@ show("login");
 async function loadDashboard(){
 show("dashboard");
 
-const snapshot = await db.collection("students").get();
+let snap = await db.collection("results").get();
 
-let scores={},correct=0,wrong=0;
+let scores={}, totalCorrect=0,totalWrong=0;
 
-snapshot.forEach(doc=>{
+snap.forEach(doc=>{
 let d=doc.data();
+
 scores[d.name]=(scores[d.name]||0)+d.score;
-correct+=d.correct;
-wrong+=d.wrong;
+totalCorrect+=d.correct;
+totalWrong+=d.wrong;
 });
 
-// BAR CHART
-new Chart(barChart,{
+// BAR
+new Chart(document.getElementById("bar"),{
 type:'bar',
 data:{
 labels:Object.keys(scores),
@@ -179,17 +195,16 @@ datasets:[{label:'النقاط',data:Object.values(scores)}]
 }
 });
 
-// PIE CHART
-new Chart(pieChart,{
+// PIE
+new Chart(document.getElementById("pie"),{
 type:'pie',
 data:{
 labels:["صحيح","خطأ"],
-datasets:[{data:[correct,wrong]}]
+datasets:[{data:[totalCorrect,totalWrong]}]
 }
 });
 }
 
-function back(){show("login")}
 function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
 </script>
 
