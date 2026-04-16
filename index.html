@@ -6,22 +6,39 @@
 
 <!-- Firebase (compat version stable) -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDM7LdmSOalh4ARB8k8NZsQvNgVG2zuNmA",
+  apiKey: "YOUR_API_KEY",
   authDomain: "maths-fcd2d.firebaseapp.com",
   projectId: "maths-fcd2d",
-  storageBucket: "maths-fcd2d.firebasestorage.app",
+  storageBucket: "maths-fcd2d.appspot.com",
   messagingSenderId: "310354706176",
-  appId: "1:310354706176:web:a3a4ceebe4f6e1b5333de5",
+  appId: "1:310354706176:web:a3a4ceebe4f6e1b53333de5",
   measurementId: "G-JV36HY44ZB"
 };
 
-  const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  console.log("Firebase connected ✅");
+console.log("Firebase ready ✅");
+
+
+// 🎯 دالة حفظ النقاط
+window.saveScore = async function(name, score) {
+  try {
+    await addDoc(collection(db, "scores"), {
+      name: name,
+      score: score,
+      date: new Date()
+    });
+    alert("تم حفظ النتيجة 🎉");
+  } catch (e) {
+    console.error("خطأ:", e);
+  }
+}
+</script>
 </script>
 
 <!-- Chart -->
