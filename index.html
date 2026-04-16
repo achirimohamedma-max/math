@@ -231,6 +231,21 @@ datasets:[{data:[totalCorrect,totalWrong]}]
 
 function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
 </script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
+  const firebaseConfig = {
+    apiKey: "حط apiKey ديالك",
+    authDomain: "maths-fcd2d.firebaseapp.com",
+    projectId: "maths-fcd2d",
+    storageBucket: "maths-fcd2d.appspot.com",
+    messagingSenderId: "حط الرقم",
+    appId: "حط appId"
+  };
+
+  const app = initializeApp(firebaseConfig);
+
+  console.log("Firebase connected ✅");
+</script>
 </body>
 </html>
